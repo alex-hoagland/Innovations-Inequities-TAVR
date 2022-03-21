@@ -28,7 +28,8 @@ if ("`treatment'" == "high" & "`margin'" == "extensive") {
 	gen num_procs = (tavr == 1 | savr == 1)
 	collapse (max) num_procs (mean) t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
 	gen allprocs = 1
-	collapse (sum) num_procs allprocs (mean) t_adopt, by(CZID yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (sum) num_procs allprocs (mean) t_adopt, by(nCZID yq) fast
 	gen outcome = num_procs / allprocs * 100
 	bysort CZID: egen todrop = total(allprocs)
 	drop if todrop <= 100 // drop if area performs few procs 
@@ -42,7 +43,8 @@ else if ("`treatment'" == "high" & "`margin'" == "intensive") {
 	
 	keep if (tavr == 1 | savr == 1) // intensive margin only
 	collapse (mean) predicted_risk t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
-	collapse (mean) predicted_risk t_adopt, by(CZID yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (mean) predicted_risk t_adopt, by(nCZID yq) fast
 	rename predicted_risk outcome 
 	replace outcome = outcome * 100
 }
@@ -52,7 +54,8 @@ else if ("`treatment'" == "low" & "`margin'" == "extensive") {
 		inlist(icd9, "3510", "3511", "3512", "3513", "3514")) // Valvuloplasty
 	collapse (max) num_procs (mean) t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
 	gen allprocs = 1
-	collapse (sum) num_procs allprocs (mean) t_adopt, by(CZID yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (sum) num_procs allprocs (mean) t_adopt, by(nCZID yq) fast
 	gen outcome = num_procs / allprocs * 100
 	bysort CZID: egen todrop = total(allprocs)
 	drop if todrop <= 100 // drop if area performs few procs 
@@ -67,7 +70,8 @@ else if ("`treatment'" == "low" & "`margin'" == "intensive") {
 	keep if (inlist(icd9, "0061", "0062", "0063", "0064", "0065", "0066") | /// Angioplasty
 		inlist(icd9, "3510", "3511", "3512", "3513", "3514")) // Valvuloplasty// intensive margin only
 	collapse (mean) predicted_risk t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
-	collapse (mean) predicted_risk t_adopt, by(CZID yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (mean) predicted_risk t_adopt, by(nCZID yq) fast
 	rename predicted_risk outcome 
 	replace outcome = outcome * 100
 }
@@ -84,7 +88,8 @@ else if ("`treatment'" == "all" & "`margin'" == "extensive") {
 	replace num_procs = 1 if savr == 1 | tavr == 1
 	collapse (max) num_procs (mean) t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
 	gen allprocs = 1
-	collapse (sum) num_procs allprocs (mean) t_adopt, by(CZID yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (sum) num_procs allprocs (mean) t_adopt, by(nCZID yq) fast
 	gen outcome = num_procs / allprocs * 100
 	bysort CZID: egen todrop = total(allprocs)
 	drop if todrop <= 100 // drop if area only does few procedures
@@ -100,7 +105,8 @@ else if ("`treatment'" == "all" & "`margin'" == "intensive") {
 		(inlist(icd9, "0061", "0062", "0063", "0064", "0065", "0066") | /// Angioplasty
 		inlist(icd9, "3510", "3511", "3512", "3513", "3514")) // Valvuloplasty // intensive margin only
 	collapse (mean) predicted_risk t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
-	collapse (mean) predicted_risk t_adop, by(CZID yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (mean) predicted_risk t_adop, by(nCZID yq) fast
 	rename predicted_risk outcome 
 	replace outcome = outcome * 100
 }
@@ -128,7 +134,7 @@ sum outcome if period_yq < 0 | missing(period_yq), d
 local pretreat = round(r(mean), .01)
 
 // Run regression 
-reghdfe outcome dummy*, absorb(CZID yq) // vce(cluster CZID) 
+reghdfe outcome dummy*, absorb(nCZID yq) // vce(cluster CZID) 
 
 // Graph results
 regsave

@@ -28,7 +28,7 @@ drop test
 
 save "$datadir/tomerge.dta", replace
 
-*** Now pull claims with those NPIs as eitehr attending or operating physicians
+*** Now pull claims with those NPIs as either attending or operating physicians
 // rm "$datadir/all_InpatientCardiology.dta"
 cap confirm file "$datadir/all_InpatientCardiology.dta"
 if (_rc == 0) {

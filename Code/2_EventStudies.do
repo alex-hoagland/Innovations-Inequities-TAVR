@@ -26,8 +26,10 @@ if (_rc != 0) { // Create file if need be
 	// note: one possibility is (a) check that all procs are covered in ICD-10 and then (b) make sure you're collapsing to proc date in ES. 
 	merge m:1 icd_prcdr_cd1 using "$datadir/InterventionalCardiacProcedures_ICDCrosswalk.dta", keep(1 3) nogenerate
 	expand 5, generate(order) // this is easier than reshaping in this case
-	keep group bene_id* clm_id from_dt provider prstate orgnpi*  at_* op_* stus_cd drg_cd admtg_dgns_cd prncpal_dgns* icd_dgns_cd* icd_prcdr_cd* prcdr_dt* ///
-		dob_dt gndr_cd race_cd cnty_cd state_cd zip_cd file_yq as_flag tavr savr icd9_* order
+	gen oop = coin_amt + ded_amt
+	keep group bene_id* clm_id from_dt provider prstate orgnpi*  at_* op_* stus_cd drg_cd admtg_dgns_cd prncpal_dgns*  /// 
+		icd_dgns_cd* icd_prcdr_cd* prcdr_dt* pmt_amt oop /// 
+		dob_dt gndr_cd race_cd cnty_cd state_cd zip_cd as_flag tavr savr icd9_* order
 	
 	cap drop icd9
 	bysort bene_id-savr: replace order = _n
@@ -37,6 +39,23 @@ if (_rc != 0) { // Create file if need be
 		replace icd9 = icd9_`i' if !missing(icd9_`i') & order == `i'
 	}
 	drop if missing(icd9)
+	
+	// Convert oop / paid amounts to 2021 USD
+	gen year = year(from_dt) 
+	drop if year < 2010
+	foreach v of varlist oop pmt_amt { 
+		replace `v' = `v' * 1.3011 if year == 2010
+		replace `v' = `v' * 1.2613 if year == 2011
+		replace `v' = `v' * 1.2357 if year == 2012
+		replace `v' = `v' * 1.2179 if year == 2013
+		replace `v' = `v' * 1.1984 if year == 2014
+		replace `v' = `v' * 1.1970 if year == 2015
+		replace `v' = `v' * 1.1821 if year == 2016
+		replace `v' = `v' * 1.1575 if year == 2017
+	}
+	replace oop = 25000 if oop > 25000
+	replace pmt_amt = 250000 if pmt_amt > 250000 // topcode both variables 
+	drop year 
 
 	// drop some useless procs that proliferate too much in ICD-10-PCS
 	// drop if inlist(icd9, "0040", "0041", "0042", "0043", "0044") // these just indicate "a proc on a vessel"
@@ -71,7 +90,71 @@ if (_rc != 0) { // Create file if need be
 	destring medinc_hh, replace
 	destring race_cd, replace 
 	xtile incq = medinc_65plus, nq(5)
+	
+	// Income data based on qualifying subsidies/eligibility
+	gen file_year = year
+	merge m:1 bene_id file_year using /disk/aging/medicare/data/harm/100pct/bsfd/2010/bsfd2010.dta, ///
+		keep(1 3) nogenerate keepusing(cstshr* rdsind* dual*) 
+	forvalues y = 2011/2016 { 
+		merge m:1 bene_id file_year using /disk/aging/medicare/data/harm/100pct/bsfd/`y'/bsfd`y'.dta, ///
+			keep(1 3 4 5) nogenerate keepusing(cstshr* rdsind* dual*) update replace
+	}
+	destring dual_mo, replace // need to update data types
+	merge m:1 bene_id file_year using /disk/aging/medicare/data/harm/100pct/bsfd/2017/bsfd0217.dta, ///
+		keep(1 3 4 5) nogenerate keepusing(cstshr* rdsind* dual*) update replace
+		
+	*** Generate low-income variables
+	// Use based on LIS at time of surgery 
+	gen surgmonth = month(from_dt)
+	tostring surgmonth, replace format("%02.0f")
 
+	gen lis_eligible = 0 
+	gen lis_enrol = 0 
+	gen lis_premsub = 0 
+	gen lis_copaysub = 0 
+
+	forvalues m = 1/12 { 
+		local mi = string(`m', "%02.0f")
+		
+		replace lis_eligible = 1 if inlist(cstshr`mi', "01", "02", "03") & surgmonth == "`mi'"
+		replace lis_enrol = 1 if inlist(cstshr`mi', "04", "05", "06", "07", "08") & surgmonth == "`mi'"
+		replace lis_premsub = 100 if inlist(cstshr`mi', "01", "02", "03", "04", "05") & surgmonth == "`mi'"
+		replace lis_premsub = 75 if cstshr`mi' == "06" & surgmonth == "`mi'"
+		replace lis_premsub = 50 if cstshr`mi' == "07" & surgmonth == "`mi'"
+		replace lis_premsub = 25 if cstshr`mi' == "08" & surgmonth == "`mi'"
+		replace lis_copaysub = 85 if inlist(cstshr`mi', "02", "05", "06", "07", "08") & surgmonth == "`mi'"
+		replace lis_copaysub = 15 if inlist(cstshr`mi', "04", "03") & surgmonth == "`mi'"
+		replace lis_copaysub = 100 if cstshr`mi' == "01" & surgmonth == "`mi'"
+	}
+
+	gen dual_mdcd = 0 
+	gen dual_lowinc_mdcr = 0
+	gen dual_other = 0 
+
+	forvalues m = 1/12 { 
+		local mi = string(`m', "%02.0f")
+		
+		replace dual_mdcd = 1 if inlist(dual_`mi', "02", "04") & surgmonth == "`mi'"
+		replace dual_lowinc = 1 if inlist(dual_`mi', "01", "03") & surgmonth == "`mi'"
+		replace dual_other = 1 if inlist(dual_`mi', "05", "06", "08") & surgmonth == "`mi'"
+	}
+
+	gen rds_ind = 0
+	forvalues m = 1/12 { 
+		local mi = string(`m', "%02.0f")
+		
+		replace rds_ind = 1 if rdsind`mi' == "Y" & surgmonth == "`mi'"
+	}
+
+	rename lis_* lowinc_lis_*
+	rename dual_mdcd lowinc_dual_mdcd
+	rename dual_lowinc lowinc_dual_mdcr
+	rename dual_other lowinc_dual_other
+	rename rds_ind lowinc_rds_ind
+
+	drop cstshr* rdsind* dual* 
+
+	compress
 	save "$datadir/IVCEventStudy_Base.dta", replace
 }
 ********************************************************************************
@@ -93,7 +176,8 @@ if ("`treatment'" == "high" & "`margin'" == "extensive") {
 	gen num_procs = (tavr == 1 | savr == 1)
 	collapse (max) num_procs (mean) t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
 	gen allprocs = 1
-	collapse (sum) num_procs allprocs (mean) t_adopt CZID, by(at_npi yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (sum) num_procs allprocs (mean) t_adopt nCZID, by(at_npi yq) fast
 	gen outcome = num_procs / allprocs * 100
 	bysort at_npi: egen todrop = total(allprocs)
 	drop if todrop <= 10 // drop if MD only does few procedures
@@ -107,7 +191,8 @@ else if ("`treatment'" == "high" & "`margin'" == "intensive") {
 	
 	keep if (tavr == 1 | savr == 1) // intensive margin only
 	collapse (mean) predicted_risk t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
-	collapse (mean) predicted_risk t_adopt CZID, by(at_npi yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (mean) predicted_risk t_adopt nCZID, by(at_npi yq) fast
 	rename predicted_risk outcome 
 	replace outcome = outcome * 100
 }
@@ -117,7 +202,8 @@ else if ("`treatment'" == "low" & "`margin'" == "extensive") {
 		inlist(icd9, "3510", "3511", "3512", "3513", "3514")) // Valvuloplasty
 	collapse (max) num_procs (mean) t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
 	gen allprocs = 1
-	collapse (sum) num_procs allprocs (mean) t_adopt CZID, by(at_npi yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (sum) num_procs allprocs (mean) t_adopt nCZID, by(at_npi yq) fast
 	gen outcome = num_procs / allprocs * 100
 	bysort at_npi: egen todrop = total(allprocs)
 	drop if todrop <= 10 // drop if MD only does 10 procedures
@@ -132,7 +218,8 @@ else if ("`treatment'" == "low" & "`margin'" == "intensive") {
 	keep if (inlist(icd9, "0061", "0062", "0063", "0064", "0065", "0066") | /// Angioplasty
 		inlist(icd9, "3510", "3511", "3512", "3513", "3514")) // Valvuloplasty// intensive margin only
 	collapse (mean) predicted_risk t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
-	collapse (mean) predicted_risk t_adopt CZID, by(at_npi yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (mean) predicted_risk t_adopt nCZID, by(at_npi yq) fast
 	rename predicted_risk outcome 
 	replace outcome = outcome * 100
 }
@@ -149,7 +236,8 @@ else if ("`treatment'" == "all" & "`margin'" == "extensive") {
 	replace num_procs = 1 if savr == 1 | tavr == 1
 	collapse (max) num_procs (mean) t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
 	gen allprocs = 1
-	collapse (sum) num_procs allprocs (mean) t_adopt CZID, by(at_npi yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (sum) num_procs allprocs (mean) t_adopt nCZID, by(at_npi yq) fast
 	gen outcome = num_procs / allprocs * 100
 	bysort at_npi: egen todrop = total(allprocs)
 	drop if todrop <= 10 // drop if MD only does 10 procedures
@@ -165,54 +253,13 @@ else if ("`treatment'" == "all" & "`margin'" == "intensive") {
 		(inlist(icd9, "0061", "0062", "0063", "0064", "0065", "0066") | /// Angioplasty
 		inlist(icd9, "3510", "3511", "3512", "3513", "3514")) // Valvuloplasty // intensive margin only
 	collapse (mean) predicted_risk t_adopt CZID, by(bene_id from_dt at_npi yq) fast // collapse to the procedure level (avoid inflation in proc codes after ICD-10)
-	collapse (mean) predicted_risk t_adopt CZID, by(at_npi yq) fast
+	bysort at_npi: egen nCZID = mode(CZID), nummode(1)
+	collapse (mean) predicted_risk t_adopt nCZID, by(at_npi yq) fast
 	rename predicted_risk outcome 
 	replace outcome = outcome * 100
 }
 
-// Generate relative time variables
-qui gen treated = (!missing(t_adopt))
-qui gen period_yq = yq -  t_adopt if treated == 1
-
-*** Gen dummy variables
-qui sum period_yq
-local mymin = `r(min)'*-1
-local mymax = `r(max)'
-
-forvalues  i = 0/`mymax' { 
-	qui gen dummy_`i' = (period_yq == `i' & treated == 1)
-}
-forvalues i = 2/`mymin' { 
-	local j = `i' * -1
-	qui gen dummy_neg_`i' = (period_yq == `j' & treated == 1)
-}
-rename dummy_neg_`mymin' dropdummy 
-
-// Store mean before treatment 
-sum outcome if period_yq < 0 | missing(period_yq), d
-local pretreat = round(r(mean), .01)
-
-// Run regression 
-reghdfe outcome dummy*, absorb(at_npi yq) vce(cluster CZID) 
-
-// Graph results
-regsave
-drop if strpos(var,"o.")
-keep if strpos(var, "dummy")
-gen y = substr(var, 11, .)
-destring y, replace
-replace y = y * -1
-replace y = real(substr(var, 7, .)) if missing(y)
-local obs = _N+1
-set obs `obs'
-replace y = -1 in `obs'
-replace coef = 0 in `obs'
-replace stderr = 0 in `obs'
-gen lb = coef - 1.96*stderr
-gen ub = coef + 1.96*stderr
-
-// keep only 4 yqs pre-/post-adoption
-drop if abs(y) > 16
+do "$allcode/EventStudyFrag.do"
 
 	// local for where to put the text label
 	qui sum y 
@@ -222,13 +269,12 @@ drop if abs(y) > 16
 	qui sum ub
 	local myy = r(max) * 0.85
 
-sort y 
 twoway (scatter coef y, color(maroon)) (line coef y, lcolor(ebblue)) /// 
 	(rarea lb ub y, lcolor(ebblue%30) fcolor(ebblue%30)), ///
 	graphregion(color(white)) legend(off) ///
 	xline(-.25, lpattern(dash)) yline(0, lcolor(red)) ///
 	xsc(r(`mymin'(4)`mymax')) xlab(`mymin'(4)`mymax') xtitle("Quarters Around TAVR Adoption") /// 
-	ylab(,angle(horizontal)) text(`myy' `myx' "Pre-treatment mean: `pretreat'%", place(e))
+	ylab(,angle(horizontal)) text(`myy' `myx' "Pre-treatment mean: $pretreat %", place(e))
 		
 // Save graphs
 graph save "$output/`figname'.gph", replace
