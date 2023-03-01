@@ -1,10 +1,12 @@
-# TAVR
-Leapfrogging and the Market Effects of Hyperspecialization
+# Innovations and Inequities in Access to Medical Services
+Alex Hoagland, University of Toronto 
+Working Paper, March 2023 
 
-## File structure
-This describes the purpose of each folder. See individual code file descriptions within folders for more detail.
-1. **MakeData** pulls and organizes the Medicare claims data of interest. 
-2. **AdoptionEffects_MDLevel** estimates and reports the effects of TAVR adoption at the individual physician level. 
-3. **AdoptionEffects_Market** estimates and reports the effects of TAVR adoption at the market level. 
-4. **Disparities** estimates and reports the effects of TAVR on access to care for at-risk populations. 
-5. **ModelEstimation** makes figures and tables associated with the model. 
+This repository includes the relevant code to replicate the outputs presented in the working paper "[Innovations and Inequities in Access to Medical Services](https://alex-hoagland.github.io/files/Hoagland_InnovationsInequities_TAVR.pdf)." 
+
+## Data
+Data used in this project comes from the CMS Research Data Assistance Center (ResDAC) [files](https://resdac.org/cms-data/files), including the 100% inpatient claims (FFS) data, the full base file for beneficiaries and providers, and the 20% outpatient FFS files from 2010 to 2017. Files contain demographic information and physician specialization information as well as fee-for-service (FFS) claims submitted by providers for reimbursement. Data are not publicly available and cannot be shared but can be requested through CMS.
+
+## Code
+Use the file TAVR_Master.do to run all relevant code. Directories should be updated to fit on your local machine or server. 
+

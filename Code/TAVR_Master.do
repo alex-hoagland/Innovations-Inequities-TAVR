@@ -32,18 +32,12 @@ label define mygroups 1 "IVC" 2 "CT" 3 "Other"
 
 // Directories
 // global mydir "/homes/nber/hoagland-dua55666/talgross-DUA55666/hoagland-dua55666"
-global mydir "C:\Users\alexh\Dropbox\TAVR"
-global datadir "$mydir/Backup_Aging/Data/CMS_Updated2023"
-// global geodata "$mydir/2_Data/Geography"
-global output "$mydir/Outputs/Debugging_2023"
-global allcode "$mydir/SourceCode_Main"
+global mydir // "C:\Users\alexh\Dropbox\TAVR"
+global datadir // "$mydir/Backup_Aging/Data/CMS_Updated2023"
+// global geodata "$mydir/2_Data/Geography" // used only for constructing maps, not in main publication
+global output // "$mydir/Outputs/Debugging_2023"
+global allcode // "$mydir/SourceCode_Main"
 ********************************************************************************
-
-
-// UNCATEGORIZED ///////////////////////////////////////////////////////////////
-do "$allcode/0_MakeIndividualPanel.do" // pulls patients with relevant AS + PCI diagnoses, then saves in "$datadir/EnrolleeSample_202203.dta"
-do "$allcode/0FRAG_AllEnrolleesIncome.do" // identifies dual-eligible patients in "$datadir/EnrolleeEventStudy_Base.dta"
-////////////////////////////////////////////////////////////////////////////////
 
 
 ***** Data preparation *********************************************************
