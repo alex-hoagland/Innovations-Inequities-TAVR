@@ -1,5 +1,6 @@
 # Innovations and Inequities in Access to Medical Services
 Alex Hoagland, University of Toronto 
+
 Working Paper, March 2023 
 
 This repository includes the relevant code to replicate the outputs presented in the working paper "[Innovations and Inequities in Access to Medical Services](https://alex-hoagland.github.io/files/Hoagland_InnovationsInequities_TAVR.pdf)." 
