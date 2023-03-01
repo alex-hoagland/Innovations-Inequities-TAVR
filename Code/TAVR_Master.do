@@ -2,80 +2,159 @@
 * Title: TAVR Master
 * Created by: Alex Hoagland
 * Created on: October 2020
-* Last modified on: March 15, 2022
+* Last modified on: January 2023
 * Last modified by: 
 * Purpose: This file runs all necessary code project "Innovations and Inequities in Access to High-Value Medical Services"
 
 * Notes: 
 
 * Key edits: 
-	- see "TODO"s here for things to check/organize/add
+
+* Key datasets: 
+		- "$datadir/AllPatients_BeneIDs.dta" has list of all cardiology enrollees
+		- "$datadir/all_IVcardiologists.dta" has list of all IVCs (there are corresponding data sets for CT surgeons + other cardiologists)
+		- "$datadir/all_InpatientCardiology.dta" has list of all relevant inpatient procedures for these beneficiaries + surgeons
 ********************************************************************************/
+
+
+***** Labels needed
+label define mygroups 1 "IVC" 2 "CT" 3 "Other"
+********************************************************************************
 
 
 ****** Packages and directories
 // be sure to cite all of these before submission
-* ssc install estout // Jann, Ben (2007). Making regression tables simplified. The Stata Journal 7(2): 227-244.
-* ssc install catplot // "CATPLOT: Stata module for plots of frequencies, fractions or percents of categorical data", Statistical Software Components S431505, Boston College Department of Economics, revised 21 Dec 2010. 
+* ssc install texdoc // Jann 2009.
+* ssc install fre // Jann 2007
+* ssc install semipar // Verardi 2012
+* ssc install reghdfe // Correia 2017
+* ssc install ppmlhdfe // Correia 2020
 
 // Directories
-global mydir "/homes/nber/hoagland-dua55666/talgross-DUA55666/hoagland-dua55666"
-global datadir "$mydir/2_Data/CMS_Updated202105"
-global geodata "$mydir/2_Data/Geography"
-global output "$mydir/ToExport/MainFigures"
-global allcode "$mydir/3_SourceCode/5_CrowdOut_Decomposition"
+// global mydir "/homes/nber/hoagland-dua55666/talgross-DUA55666/hoagland-dua55666"
+global mydir "C:\Users\alexh\Dropbox\TAVR"
+global datadir "$mydir/Backup_Aging/Data/CMS_Updated2023"
+// global geodata "$mydir/2_Data/Geography"
+global output "$mydir/Outputs/Debugging_2023"
+global allcode "$mydir/SourceCode_Main"
 ********************************************************************************
 
 
-***** Data preparation code
-// TODO: Need to test this section
-// TODO: may need to move in additional (earlier) files here
-do "$allcode/0a_IDPhysicianTypes.do" // Identifies NPIs of all CT surgeons, IVCs, and other cardiologists
-do "$allcode/0b_IDInpatientProcedures_ByPhysicianType.do" // Identifies all Inpatient Procedures involving cardiologists
-do "$allcode/1_EstimatePatientRisk.do" // Estimates patient risk based on STS-PROM model 
-	// TODO: can add more demographic/DXI information here
-********************************************************************************
+// UNCATEGORIZED ///////////////////////////////////////////////////////////////
+do "$allcode/0_MakeIndividualPanel.do" // pulls patients with relevant AS + PCI diagnoses, then saves in "$datadir/EnrolleeSample_202203.dta"
+do "$allcode/0FRAG_AllEnrolleesIncome.do" // identifies dual-eligible patients in "$datadir/EnrolleeEventStudy_Base.dta"
+////////////////////////////////////////////////////////////////////////////////
 
 
-***** Summary Tables
-do "$allcode/1a_PatientSummaryTable.do" // Patient Summary Tables (need to test/update)
-do "$allcode/1b_ProviderSummaryTable.do" // role of CT surgeons and IVCs in TAVR/SAVR procs (Appendix)
+***** Data preparation *********************************************************
+// Physician-Level Identifiers
+do "$allcode/0a_IDPhysicianTypes.do" // Identifies NPIs of all CT surgeons, IVCs, and other cardiologists -- CHECKED 2023.02.01
+do "$allcode/0b_IDInpatientProcedures_ByPhysicianType.do" // Identifies all Inpatient Procedures involving cardiologists -- CHECKED 2023.02.01
+do "$allcode/0c_IDASPatients.do" // This pulls all surgical candidates based on diagnosis codes -- CHECKED 2023.02.01
+do "$allcode/0d_SurgicalOutcomes.do" // Pulls all surgical outcomes associated with TAVR/SAVR/PTCA procedures -- CHECKED 2023.02.07
+	
+// Estimate Patient Risk (Section 4.1; Appendix Figure 3, Appendix Table 3)
+do "$allcode/1_EstimatePatientRisk.do" // Constructs relevant risk variables -- CHECKED 2023.02.07
+do "$allcode/1a_RiskRegressions.do" // Estimates patient risk based on STS-PROM model -- CHECKED 2023.02.08
+
+// Summary Tables
+do "$allcode/1b_PatientSummaryTable.do" // Appendix Table 2: Patient Summary Tables -- CHECKED 2023.02.09
+do "$allcode/1c_ProviderSummaryTable.do" // Appendix Table 1, Appendix Figure 2 -- CHECKED 2023.02.09
+	// role of CT surgeons and IVCs in TAVR/SAVR procs (Appendix)
 	// note: this file works! Just don't overwrite the table unless you really mean it b/c I haven't hard-coded all the formatting (commas, %s, etc.)
+	
+// Construct Panels for Event Studies
+	// TODO: market-level for surgeons, also want one that shows pr(surgery) from those in inpatient + outpatient with appropriate diagnoses (?) 
 ********************************************************************************
 
 
 ***** Main Figures/Tables
-do "$allcode/2_EventStudies.do" high extensive // Runs event studies for different outcomes at surgeon level --- here, run all
-do "$allcode/2_EventStudies.do" high intensive
-do "$allcode/2_EventStudies.do" low extensive
-do "$allcode/2_EventStudies.do" low intensive
-do "$allcode/2_EventStudies.do" all extensive
-do "$allcode/2_EventStudies.do" all intensive
+// FIGURE 3 (plus accompanying appendix/extras)
+	// total surgeries (Figure 3, panel a)
+	do "$allcode/2a_EventStudies_MarketLevel.do" all extensive 
+	do "$allcode/2a_EventStudies_MarketLevel.do" high extensive 
+	do "$allcode/2a_EventStudies_MarketLevel.do" low extensive 
 
-do "$allcode/2a_EventStudies_MarketLevel.do" high extensive // Runs event studies for different outcomes at CZ level --- here, run all
-do "$allcode/2a_EventStudies_MarketLevel.do" high intensive
-do "$allcode/2a_EventStudies_MarketLevel.do" low extensive
-do "$allcode/2a_EventStudies_MarketLevel.do" low intensive
-do "$allcode/2a_EventStudies_MarketLevel.do" all extensive
-do "$allcode/2a_EventStudies_MarketLevel.do" all intensive
+	// Extra figures
+	do "$allcode/2a_EventStudies_MarketLevel.do" all intensive predrisk_30
+	do "$allcode/2a_EventStudies_MarketLevel.do" all intensive predrisk_60
+	do "$allcode/2a_EventStudies_MarketLevel.do" all intensive predrisk_90
+	do "$allcode/2a_EventStudies_MarketLevel.do" high intensive predrisk_30
+	do "$allcode/2a_EventStudies_MarketLevel.do" high intensive predrisk_60
+	do "$allcode/2a_EventStudies_MarketLevel.do" high intensive predrisk_90
+	do "$allcode/2a_EventStudies_MarketLevel.do" low intensive predrisk_30
+	do "$allcode/2a_EventStudies_MarketLevel.do" low intensive predrisk_60
+	do "$allcode/2a_EventStudies_MarketLevel.do" low intensive predrisk_90
+	do "$allcode/2b_IntensiveMargin_CombineGraphs.do" all
+	do "$allcode/2b_IntensiveMargin_CombineGraphs.do" high // note: lots of noise here
+	do "$allcode/2b_IntensiveMargin_CombineGraphs.do" low // TODO: rerun these without dropping any?
+	
+	// likelihood of surgery by risk (binned)  (Figure 3, panel B)
+	local allfiles: dir "$datadir/" files "binned_*"
+	foreach f of local allfiles { 
+		cap rm `f'
+	}
+	forvalues i = 0/60 { 
+		local rlb = .002*`i'
+		local ulb = `rlb' + .002
+		di "***** RUNNING REGRESSION `rlb' *****"
+		qui do "$allcode/2c_EventStudies_MarketLevel_BinnedRisk.do" all `rlb' `ulb'
+	}
+	do "$allcode/2c_EventStudies_MarketLevel_BinnedRisk.do" all "all"
+	forvalues i = 0/60 { 
+		local rlb = .002*`i'
+		local ulb = `rlb' + .002
+		di "***** RUNNING REGRESSION `rlb' *****"
+		qui do "$allcode/2c_EventStudies_MarketLevel_BinnedRisk.do" high `rlb' `ulb'
+	}
+	do "$allcode/2c_EventStudies_MarketLevel_BinnedRisk.do" high "all"
+	forvalues i = 0/60 { 
+		local rlb = .002*`i'
+		local ulb = `rlb' + .002
+		di "***** RUNNING REGRESSION `rlb' *****"
+		qui do "$allcode/2c_EventStudies_MarketLevel_BinnedRisk.do" low `rlb' `ulb'
+	}
+	do "$allcode/2c_EventStudies_MarketLevel_BinnedRisk.do" low "all"
+		
+	// Extra Option: Saturated by risk
+// 	do "$allcode/2Extra_1_EventStudies_MarketLevel_Saturated.do" all	
+// 	do "$allcode/2Extra_2_EventStudies_MarketLevel_Semiparametric.do" all 
 
-*** Decompose heterogeneity in effect for high-risk patients (on PCI use)
-forvalues i = 4/10 { // Loop through values of thetabar (lower bound for patient risk)
-	local j = `i'/100
-	di "LOWER BOUND IS `j'"
-	do "$allcode/3a_LowIntensity_Decomposition_Threshold.do" `j' // thetabar is the definition of the cutoff region 
-}
-do "$allcode/3b_LowIntensity_Decomposition_Bins.do" 1 // For all interventions
-do "$allcode/3b_LowIntensity_Decomposition_Bins.do" 0 // For PCI only
-do "$allcode/3c_LowIntensity_Decomposition_Nonparametric.do" 1 // For all interventions
-do "$allcode/3c_LowIntensity_Decomposition_Nonparametric.do" 0 // For PCI Only
+	// Unused options: individual level codes
+	// do "$allcode/2Extra_3_EventStudies_AllSurgicalCandidates.do" all .3
+	// do "$allcode/2Extra_4_EventStudies_AllSurgicalCandidates_SaturatedRisk.do" all 1
+	// do "$allcode/2Extra_5_EventStudies_AllSurgicalCandidates_SemiparametricRisk.do" all 0.3
 
-*** Now look at inequities
-do "$allcode/4_Inequities_Income.do" income all .05 .1 // income/race, all/PCI, then the crowd-out region (two thresholds)
-// TODO: add TAVR adoption over income distribution, effect of TAVR on PCI over income, effect of TAVR on all over income 
-// TODO: *then* focus on the crowdout region(s) -- look more into very low-risk patients getting ignored? 
-********************************************************************************
-
-
-***** Other Appendix Figures/Tables
+		// MECHANISMS: readmissions and mortality
+	do "$allcode/3a_Mechanisms_SurgicalOutcomes.do" low readmit 
+	do "$allcode/3a_Mechanisms_SurgicalOutcomes.do" low mortality 
+	
+	do "$allcode/3a_Mechanisms_SurgicalOutcomes.do" high readmit 
+	do "$allcode/3a_Mechanisms_SurgicalOutcomes.do" all readmit 
+	do "$allcode/3a_Mechanisms_SurgicalOutcomes.do" high mortality 
+	do "$allcode/3a_Mechanisms_SurgicalOutcomes.do" all mortality 
+	
+	// INEQUITIES: Market level 
+	do "$allcode/4a_Inequities_Binned.do" low riskvar_white
+	do "$allcode/4a_Inequities_Binned.do" low riskvar_dual_any
+	do "$allcode/4a_Inequities_Binned.do" low riskvar_dual_full
+	do "$allcode/4a_Inequities_Binned.do" low riskvar_adi_5
+	do "$allcode/4a_Inequities_Binned.do" low riskvar_adi_9
+	do "$allcode/4b_Inequities_Binned_Combine.do" low
+	
+	do "$allcode/4a_Inequities_Binned.do" high riskvar_white
+	do "$allcode/4a_Inequities_Binned.do" high riskvar_dual_any
+	do "$allcode/4a_Inequities_Binned.do" high riskvar_dual_full
+	do "$allcode/4a_Inequities_Binned.do" high riskvar_adi_5
+	do "$allcode/4a_Inequities_Binned.do" high riskvar_adi_9
+	do "$allcode/4b_Inequities_Binned_Combine.do" high
+	
+	do "$allcode/4a_Inequities_Binned.do" all riskvar_white
+	do "$allcode/4a_Inequities_Binned.do" all riskvar_dual_any
+	do "$allcode/4a_Inequities_Binned.do" all riskvar_dual_full
+	do "$allcode/4a_Inequities_Binned.do" all riskvar_adi_5
+	do "$allcode/4a_Inequities_Binned.do" all riskvar_adi_9
+	do "$allcode/4b_Inequities_Binned_Combine.do" all
+	
+	do "$allcode/Appendix_TAVRScreening.do" 
 ********************************************************************************

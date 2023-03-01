@@ -1,95 +1,38 @@
-                    &\multicolumn{1}{c}{(1)}\\
-                    &\multicolumn{1}{c}{outcome\_mortality}\\
-\hline
-outcome\_mortality   &            \\
-Year from file name &       0.200\\
-                    &     (39.96)\\
-[1em]
-(max) riskvar\_anysurgery&     -0.0211\\
-                    &     (-0.71)\\
-[1em]
-(max) riskvar\_numsurgeries&     -0.0895\\
-                    &     (-4.63)\\
-[1em]
-(max) riskvar\_previousbypass&      -0.859\\
-                    &    (-37.41)\\
-[1em]
-(max) riskvar\_previousvalve&      -0.662\\
-                    &    (-34.02)\\
-[1em]
-(max) riskvar\_previouspci&      -0.699\\
-                    &    (-35.98)\\
-[1em]
-Age at End of Reference Year&      0.0309\\
-                    &     (51.76)\\
-[1em]
-riskvar\_fem         &      0.0446\\
-                    &      (4.03)\\
-[1em]
-riskvar\_black       &       0.186\\
-                    &      (9.92)\\
-[1em]
-riskvar\_hisp        &      0.0582\\
-                    &      (1.16)\\
-[1em]
-riskvar\_othernonwhite&      0.0500\\
-                    &      (1.71)\\
-[1em]
-riskvar\_numccs      &     -0.0557\\
-                    &    (-17.38)\\
-[1em]
-riskvar\_chf         &       1.156\\
-                    &     (81.22)\\
-[1em]
-riskvar\_diabetes    &       0.177\\
-                    &     (14.30)\\
-[1em]
-riskvar\_hypert      &      -0.450\\
-                    &    (-20.84)\\
-[1em]
-riskvar\_stroke      &       0.377\\
-                    &     (23.95)\\
-[1em]
-riskvar\_ami         &       0.844\\
-                    &     (60.13)\\
-[1em]
-riskvar\_copd        &       0.305\\
-                    &     (24.64)\\
-[1em]
-riskvar\_incomequintile\_1&      0.0890\\
-                    &      (4.56)\\
-[1em]
-riskvar\_incomequintile\_2&      0.0474\\
-                    &      (2.61)\\
-[1em]
-riskvar\_incomequintile\_3&      0.0237\\
-                    &      (1.46)\\
-[1em]
-riskvar\_incomequintile\_4&      0.0235\\
-                    &      (1.59)\\
-[1em]
-Year from file name=2010&           0\\
-                    &         (.)\\
-[1em]
-Year from file name=2011&      -0.172\\
-                    &     (-4.66)\\
-[1em]
-Year from file name=2012&      -0.368\\
-                    &    (-10.45)\\
-[1em]
-Year from file name=2013&      -0.208\\
-                    &     (-6.70)\\
-[1em]
-Year from file name=2014&      -0.359\\
-                    &    (-10.89)\\
-[1em]
-Year from file name=2015&     -0.0679\\
-                    &     (-3.97)\\
-[1em]
-Year from file name=2016&           0\\
-                    &         (.)\\
-[1em]
-Constant            &      -407.5\\
-                    &    (-40.48)\\
-\hline
-Observations        &      714400\\
+&\multicolumn{2}{c}{30-Day Mortality}&\multicolumn{2}{c}{60-Day Mortality}&\multicolumn{2}{c}{90-Day Mortality}\\\cmidrule{2-3}\cmidrule{4-5}\cmidrule{6-7}
+& ME & 95\% CI & ME & 95\% CI & ME & 95\% CI \\
+\toprule 
+\multicolumn{2}{l}{\textbf{Panel A:} Patient Demographics} \\ 
+Patient age & -0.000&[-0.001,-0.000]& -0.000&[-0.000,-0.000]& 0.000&[-0.000,0.000]\\
+Female & 0.007&[0.006,0.008]& 0.006 &[0.004,0.007]& 0.004 &[0.002,0.006]\\
+Black & 0.011 &[0.008,0.014]& 0.009&[0.006,0.013]& 0.009 &[0.005,0.012]\\
+Hispanic & 0.006&[-0.000,0.013]& 0.010&[0.002,0.017]& 0.010 &[0.002,0.018]\\
+Other Minority Race& 0.011&[0.007,0.015]& 0.015&[0.010,0.019]& 0.014 &[0.009,0.019]\\
+ADI (5-digit ZIP) & 0.000&[-0.000,0.000]& 0.000&[-0.000,0.000]& 0.000 &[-0.000,0.000]\\
+ADI (9-digit ZIP) & 0.000&[0.000,0.000]& 0.000&[0.000,0.000]& 0.000 &[0.000,0.000]\\
+Log(Median Zip Income) & -0.006&[-0.010,-0.003]& -0.010&[-0.014,-0.006]& -0.013 &[-0.017,-0.009]\\
+Dual Eligible & 0.049 &[0.047,0.051]& 0.061&[0.059,0.064]& 0.069 &[0.066,0.072]\\
+\midrule 
+\multicolumn{2}{l}{\textbf{Panel B:} Chronic Conditions} \\ 
+\# of Chronic Conditions & 0.004&[0.004,0.004]& 0.006 &[0.005,0.006]& 0.007 &[0.007,0.008]\\
+\hspace{.25cm} CC: AMI & 0.005&[0.003,0.007]& 0.006&[0.003,0.008]& 0.005 &[0.002,0.007]\\
+\hspace{.25cm} CC: COPD & 0.008&[0.006,0.009]& 0.011 &[0.009,0.012]& 0.011 &[0.009,0.013]\\
+\hspace{.25cm} CC: CHF & 0.018&[0.016,0.019]& 0.024 &[0.022,0.025]& 0.026 &[0.024,0.028]\\
+\hspace{.25cm} CC: Diabetes & -0.003&[-0.005,-0.002]& -0.004&[-0.005,-0.002]& -0.004 &[-0.005,-0.002]\\
+\hspace{.25cm} CC: Hypertension & 0.006&[0.004,0.009]& 0.006&[0.003,0.009]& 0.006 &[0.002,0.009]\\
+\hspace{.25cm} CC: Stroke & -0.000&[-0.002,0.001]& -0.001&[-0.003,0.001]& -0.002 &[-0.004,0.000]\\
+\midrule
+\multicolumn{3}{l}{\textbf{Panel C:} Previous Healthcare Utilization} \\ 
+Any Previous Surgery& 0.011&[0.002,0.021]& 0.007&[-0.005,0.018]& 0.001 &[-0.013,0.014]\\
+\# of Previous Surgeries & 0.006&[0.004,0.008]& 0.006&[0.003,0.009]& 0.005 &[0.002,0.008]\\
+\hspace{.25cm} Previous PCI & -0.009&[-0.018,0.001]& -0.004&[-0.016,0.009]& 0.003 &[-0.011,0.017]\\
+\hspace{.25cm} Previous SAVR & 0.021&[0.014,0.028]& 0.023&[0.014,0.031]& 0.022 &[0.013,0.031]\\
+\hspace{.25cm} Previous TAVR & 0.006&[-0.008,0.020]& 0.012&[-0.004,0.028]& 0.013 &[-0.004,0.030]\\
+Any ED Visit & 0.016&[0.014,0.018]& 0.025&[0.023,0.027]& 0.030 &[0.028,0.032]\\
+\# of ED Visits & -0.001&[-0.002,0.000]& -0.005&[-0.005,-0.004]& -0.006 &[-0.007,-0.005]\\
+Any Hospital Stay & 0.032&[0.023,0.041]& 0.017&[0.008,0.026]& 0.004 &[-0.006,0.013]\\
+\# Hospital Stays & -0.023 &[-0.024,-0.022]& -0.034&[-0.035,-0.033]& -0.037 &[-0.038,-0.035]\\
+\# of Readmissions & 0.016&[0.015,0.018]& 0.029&[0.028,0.031]& 0.034 &[0.032,0.035]\\
+\# of Days Admitted & -0.000 &[-0.000,-0.000]& 0.001&[0.001,0.001]& 0.002 &[0.002,0.002]\\
+\midrule 
+Observations & \multicolumn{2}{c}{377,532} & \multicolumn{2}{c}{377,532} & \multicolumn{2}{c}{377,532}\\
+\bottomrule

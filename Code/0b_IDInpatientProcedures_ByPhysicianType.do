@@ -46,6 +46,16 @@ else {
 	rename npi at_npi
 	merge 1:m at_npi using /disk/aging/medicare/data/harm/100pct/ip/`yr'/ipc`yr'.dta, ///
 		keep(3) nogenerate
+		
+	drop icd_dgns_cd11 icd_dgns_cd12 icd_dgns_cd13 icd_dgns_cd14 icd_dgns_cd15 icd_dgns_cd16 icd_dgns_cd17 icd_dgns_cd18 icd_dgns_cd19 icd_dgns_cd20 icd_dgns_cd21 icd_dgns_cd22 icd_dgns_cd23 icd_dgns_cd24 icd_dgns_cd25
+	drop icd_prcdr_cd11 icd_prcdr_cd12 icd_prcdr_cd13 icd_prcdr_cd14 icd_prcdr_cd15 icd_prcdr_cd16 icd_prcdr_cd17 icd_prcdr_cd18 icd_prcdr_cd19
+	drop prcdr_dt11 prcdr_dt12 prcdr_dt13 prcdr_dt14 prcdr_dt15 prcdr_dt16 prcdr_dt17 prcdr_dt18 prcdr_dt19 prcdr_dt20 prcdr_dt21 prcdr_dt22 prcdr_dt23 prcdr_dt24
+	drop clm_mdcl_*
+	drop icd_dgns_e* 
+	cap drop icd_dgns_v* 
+	cap drop clm_e* 
+	cap drop icd_prcdr_v* 
+	cap drop clm_poa*
 	
 	* Flag patients with aortic stenosis diagnoses (only in first 3 diagnoses)
 	gen as_flag = 0 
@@ -83,7 +93,6 @@ else {
 	
 	* Combine and save
 	append using "$datadir/all_InpatientCardiology.dta"
-	compress
 	save "$datadir/all_InpatientCardiology.dta", replace
 
 	use "$datadir/tomerge", clear
@@ -91,6 +100,16 @@ else {
 	rename npi op_npi
 	merge 1:m op_npi using /disk/aging/medicare/data/harm/100pct/ip/`yr'/ipc`yr'.dta, ///
 		keep(3) nogenerate
+	
+	drop icd_dgns_cd11 icd_dgns_cd12 icd_dgns_cd13 icd_dgns_cd14 icd_dgns_cd15 icd_dgns_cd16 icd_dgns_cd17 icd_dgns_cd18 icd_dgns_cd19 icd_dgns_cd20 icd_dgns_cd21 icd_dgns_cd22 icd_dgns_cd23 icd_dgns_cd24 icd_dgns_cd25
+	drop icd_prcdr_cd11 icd_prcdr_cd12 icd_prcdr_cd13 icd_prcdr_cd14 icd_prcdr_cd15 icd_prcdr_cd16 icd_prcdr_cd17 icd_prcdr_cd18 icd_prcdr_cd19
+	drop prcdr_dt11 prcdr_dt12 prcdr_dt13 prcdr_dt14 prcdr_dt15 prcdr_dt16 prcdr_dt17 prcdr_dt18 prcdr_dt19 prcdr_dt20 prcdr_dt21 prcdr_dt22 prcdr_dt23 prcdr_dt24
+	drop clm_mdcl_*
+	drop icd_dgns_e* 
+	cap drop icd_dgns_v* 
+	cap drop clm_e* 
+	cap drop icd_prcdr_v* 
+	cap drop clm_poa*
 	
 	* Flag patients with aortic stenosis diagnoses (only in first 3 diagnoses)
 	gen as_flag = 0 
