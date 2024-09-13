@@ -1,0 +1,12 @@
+#!/bin/csh
+
+#$ -N TAVRPrices_2006
+#$ -l h_rt=1:00:00
+#$ -j y
+#$ -P econdept
+
+# Load SAS
+module load sas
+
+#Run the program
+sas 1.TAVRPrices_2006.sas
